@@ -1,10 +1,8 @@
-import ParticlesBackground from "../components/ParticlesBackground";
-
 
 const HRrequirements = ()  => {
     return (
         <>
-            <ParticlesBackground />
+            <h1>HRrequirements</h1>
         </>
     );
 };
