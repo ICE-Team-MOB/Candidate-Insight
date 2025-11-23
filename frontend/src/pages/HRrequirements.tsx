@@ -1,10 +1,19 @@
-import { useState } from "react";
+// src/pages/HRrequirements.tsx
+
+import { useHRRequirements } from "../context/context";
 
 const HRrequirements = () => {
-  const [education, setEducation] = useState("");
-  const [sector, setSector] = useState("");
-  const [experience, setExperience] = useState("");
-  const [workFormat, setWorkFormat] = useState("");
+  const {
+    education,
+    sector,
+    experience,
+    workFormat,
+    setEducation,
+    setSector,
+    setExperience,
+    setWorkFormat,
+    resetRequirements,
+  } = useHRRequirements();
 
   const educationOptions = [
     { label: "Початкова освіта", value: "primary_education" },
@@ -73,7 +82,7 @@ const HRrequirements = () => {
             </p>
             <select
               value={education}
-              onChange={(e) => setEducation(e.target.value)}
+              onChange={(e) => setEducation(e.target.value as any)}
               className={selectBaseClasses}
             >
               <option value="">Оберіть рівень освіти…</option>
@@ -95,7 +104,7 @@ const HRrequirements = () => {
             </p>
             <select
               value={sector}
-              onChange={(e) => setSector(e.target.value)}
+              onChange={(e) => setSector(e.target.value as any)}
               className={selectBaseClasses}
             >
               <option value="">Оберіть галузь…</option>
@@ -117,7 +126,7 @@ const HRrequirements = () => {
             </p>
             <select
               value={experience}
-              onChange={(e) => setExperience(e.target.value)}
+              onChange={(e) => setExperience(e.target.value as any)}
               className={selectBaseClasses}
             >
               <option value="">Оберіть рівень досвіду…</option>
@@ -139,7 +148,7 @@ const HRrequirements = () => {
             </p>
             <select
               value={workFormat}
-              onChange={(e) => setWorkFormat(e.target.value)}
+              onChange={(e) => setWorkFormat(e.target.value as any)}
               className={selectBaseClasses}
             >
               <option value="">Оберіть формат…</option>
@@ -152,21 +161,31 @@ const HRrequirements = () => {
           </div>
         </div>
 
-        {/* Низ карточки: кнопка + короткий підсумок */}
+        {/* Низ: кнопка + превʼю + ресет */}
         <div className="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <button
-            type="button"
-            className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium 
-                       bg-blue-500/90 hover:bg-blue-500 active:scale-[0.98] 
-                       text-white shadow-lg shadow-blue-500/30 transition-transform duration-150"
-          >
-            Застосувати вимоги
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium 
+                         bg-blue-500/90 hover:bg-blue-500 active:scale-[0.98] 
+                         text-white shadow-lg shadow-blue-500/30 transition-transform duration-150"
+            >
+              Застосувати вимоги
+            </button>
+
+            <button
+              type="button"
+              onClick={resetRequirements}
+              className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-xs font-medium 
+                         bg-white/10 hover:bg-white/20 text-gray-100 border border-white/20 
+                         transition-transform duration-150"
+            >
+              Скинути
+            </button>
+          </div>
 
           <div className="text-xs text-gray-200/80 md:text-right">
-            <p className="mb-1 font-medium text-gray-100">
-              Поточний фільтр:
-            </p>
+            <p className="mb-1 font-medium text-gray-100">Поточний фільтр:</p>
             <p className="text-[11px] md:text-xs text-gray-200/80">
               Освіта:{" "}
               <span className="font-semibold">
