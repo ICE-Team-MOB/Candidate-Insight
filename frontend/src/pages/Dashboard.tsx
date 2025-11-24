@@ -1,4 +1,5 @@
-import React from "react";
+import { useHRRequirements } from "../context/context";
+
 
 type EducationValue =
   | "primary_education"
@@ -155,14 +156,7 @@ const calcMatchScore = (candidate: Candidate, hr: HRRequirements): number => {
   return Math.round((score / criteriaCount) * 100);
 };
 
-// 🧪 Поки що мокові дані
-const hrRequirements: HRRequirements = {
-  education: "bachelor",
-  sector: "it",
-  experience: "1_3",
-  workFormat: "remote",
-};
-
+// 🧪 Поки що мокові дані кандидатів
 const candidates: Candidate[] = [
   {
     id: 1,
@@ -203,6 +197,22 @@ const candidates: Candidate[] = [
 ];
 
 const Dashboard = () => {
+  // ⬇️ Берём актуальные требования из контекста
+  const {
+    education,
+    sector,
+    experience,
+    workFormat,
+  } = useHRRequirements();
+
+  // Мапим контекст ("" | value) в объект требований (value | undefined)
+  const hrRequirements: HRRequirements = {
+    education: education ? (education as EducationValue) : undefined,
+    sector: sector ? (sector as SectorValue) : undefined,
+    experience: experience ? (experience as ExperienceValue) : undefined,
+    workFormat: workFormat ? (workFormat as WorkFormatValue) : undefined,
+  };
+
   return (
     <div className="flex items-start justify-center min-h-[calc(100vh-5rem)] px-4 py-8">
       <div className="w-full max-w-6xl space-y-8">
