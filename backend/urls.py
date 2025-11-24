@@ -21,6 +21,6 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('cv-holder', include('backendApps.cvHolder.urls')),
+    path('cv-holder/', include('backendApps.cvHolder.urls')),
     re_path(r"^(?:.*)/?$", TemplateView.as_view(template_name="index.html")),
 ]

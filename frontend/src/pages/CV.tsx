@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getCookie } from "../utils/csrf";
 
 const CV = () => {
   const [mode, setMode] = useState<"pdf" | "manual">("pdf");
@@ -81,34 +82,82 @@ const CV = () => {
     setFile(selected);
   };
 
-  const handleSubmit = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
     if (mode === "pdf") {
       if (!file) {
         alert("Будь ласка, завантаж резюме у форматі PDF.");
         return;
       }
-      console.log("Відправляємо PDF:", file);
-    } else {
-      if (
-        !firstName &&
-        !lastName &&
-        !education &&
-        !sector &&
-        !experience &&
-        !workFormat
-      ) {
-        alert("Заповни хоча б одне поле, щоб зберегти анкету.");
-        return;
+      // тут позже можно будет тоже отправлять файл на бэк
+      console.log("Поки що просто лог:", file.name);
+      return;
+    }
+
+    // mode === "manual"
+    if (
+      !firstName &&
+      !lastName &&
+      !education &&
+      !sector &&
+      !experience &&
+      !workFormat
+    ) {
+      alert("Заповни хоча б одне поле, щоб зберегти анкету.");
+      return;
+    }
+
+    const payload = {
+      firstName,
+      lastName,
+      education,
+      sector,
+      experience,
+      workFormat,
+    };
+
+    try {
+      setIsSubmitting(true);
+
+      const csrftoken = getCookie("csrftoken");
+
+      const res = await fetch("/cv-holder/cv-form-upload/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrftoken ? { "X-CSRFToken": csrftoken } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        console.error("Помилка бекенду:", errorData || res.statusText);
+        throw new Error("Не вдалося зберегти кандидата");
       }
-      const payload = {
-        firstName,
-        lastName,
-        education,
-        sector,
-        experience,
-        workFormat,
-      };
-      console.log("Відправляємо анкету:", payload);
+
+      const data = await res.json();
+      console.log("Кандидат збережений:", data);
+
+      setSubmitSuccess("Резюме кандидата успішно збережено ✅");
+
+      setFirstName("");
+      setLastName("");
+      setEducation("");
+      setSector("");
+      setExperience("");
+      setWorkFormat("");
+    } catch (err) {
+      console.error(err);
+      setSubmitError("Сталася помилка при збереженні. Спробуй ще раз.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -328,20 +377,28 @@ const CV = () => {
           <button
             type="button"
             onClick={handleSubmit}
-            className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium 
-                       bg-blue-500/90 hover:bg-blue-500 active:scale-[0.98] 
-                       text-white shadow-lg shadow-blue-500/30 transition-transform duration-150"
+            disabled={isSubmitting}
+            className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium 
+                       ${isSubmitting ? "bg-blue-400 cursor-wait" : "bg-blue-500/90 hover:bg-blue-500 active:scale-[0.98]"} 
+                       text-white shadow-lg shadow-blue-500/30 transition-transform duration-150`}
           >
-            Зберегти резюме
+            {isSubmitting ? "Зберігаємо..." : "Зберегти резюме"}
           </button>
 
-          <div className="text-xs text-gray-200/80 md:text-right">
+          <div className="text-xs text-gray-200/80 md:text-right space-y-1">
             <p className="mb-1 font-medium text-gray-100">
               Режим:{" "}
               <span className="font-semibold">
                 {mode === "pdf" ? "завантаження PDF" : "анкетні дані"}
               </span>
             </p>
+
+            {submitSuccess && (
+              <p className="text-[11px] text-emerald-300">{submitSuccess}</p>
+            )}
+            {submitError && (
+              <p className="text-[11px] text-red-300">{submitError}</p>
+            )}
             {mode === "manual" && (
               <p className="text-[11px] md:text-xs text-gray-200/80">
                 Кандидат:{" "}
