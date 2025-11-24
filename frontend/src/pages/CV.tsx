@@ -95,8 +95,35 @@ const CV = () => {
         alert("Будь ласка, завантаж резюме у форматі PDF.");
         return;
       }
-      // тут позже можно будет тоже отправлять файл на бэк
-      console.log("Поки що просто лог:", file.name);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        setIsSubmitting(true);
+
+        const res = await fetch("/cv-holder/cv-pdf-upload/", {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          console.error("Помилка бекенду:", errData || res.statusText);
+          throw new Error("Не вдалося завантажити PDF");
+        }
+
+        const data = await res.json();
+        console.log("Кандидат створений з PDF:", data);
+        setSubmitSuccess("Резюме з PDF успішно оброблено ✅");
+      } catch (e) {
+        console.error(e);
+        setSubmitError("Сталася помилка при завантаженні PDF.");
+      } finally {
+        setIsSubmitting(false);
+      }
+
       return;
     }
 
