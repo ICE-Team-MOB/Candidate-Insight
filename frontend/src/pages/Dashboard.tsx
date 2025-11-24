@@ -99,14 +99,6 @@ const educationOrder: EducationValue[] = [
   "doctor_of_science",
 ];
 
-const experienceOrder: ExperienceValue[] = [
-  "no_experience",
-  "0_1",
-  "1_3",
-  "3_5",
-  "5_plus",
-];
-
 const getLabel = <T extends string>(
   options: { label: string; value: T }[],
   value: T
@@ -115,37 +107,96 @@ const getLabel = <T extends string>(
 const indexOrMinusOne = <T extends string>(order: T[], v?: T) =>
   v ? order.indexOf(v) : -1;
 
-const calcMatchScore = (candidate: Candidate, hr: HRRequirements): number => {
-  let score = 0;
-  let criteriaCount = 0;
+// 🔹 минимальные годы для требования (порог)
+const expMinYears: Record<ExperienceValue, number> = {
+  no_experience: 0,
+  "0_1": 0,
+  "1_3": 1,
+  "3_5": 3,
+  "5_plus": 5,
+};
 
-  if (hr.education) {
-    criteriaCount++;
-    const cIdx = indexOrMinusOne(educationOrder, candidate.education);
-    const rIdx = indexOrMinusOne(educationOrder, hr.education);
-    if (cIdx >= rIdx) score += 1;
+// 🔹 «типичные» годы для кандидата (оценка)
+const expMidYears: Record<ExperienceValue, number> = {
+  no_experience: 0,
+  "0_1": 0.5,
+  "1_3": 2,
+  "3_5": 4,
+  "5_plus": 6,
+};
+
+const calcMatchScore = (candidate: Candidate, hr: HRRequirements): number => {
+  const WEIGHTS = {
+    education: 0.2,
+    sector: 0.4,
+    experience: 0.3,
+    workFormat: 0.1,
+  } as const;
+
+  let totalWeight = 0;
+  let score = 0;
+
+  let sectorMatches = true;
+  if (hr.sector) {
+    const baseW = WEIGHTS.sector;
+    totalWeight += baseW;
+
+    sectorMatches = candidate.sector === hr.sector;
+    score += sectorMatches ? baseW : 0;
   }
 
-  if (hr.sector) {
-    criteriaCount++;
-    if (candidate.sector === hr.sector) score += 1;
+  if (hr.sector && !sectorMatches) {
+    return 0;
+  }
+
+  if (hr.education) {
+    const baseW = WEIGHTS.education;
+    const cIdx = indexOrMinusOne(educationOrder, candidate.education);
+    const rIdx = indexOrMinusOne(educationOrder, hr.education);
+
+    if (cIdx >= rIdx) {
+      const maxBonusFactor = 0.3;
+      const levelsAbove = cIdx - rIdx;
+      const maxLevelsAbove = educationOrder.length - 1 - rIdx;
+      const bonusRel = maxLevelsAbove > 0 ? levelsAbove / maxLevelsAbove : 0;
+      const bonusFactor = 1 + maxBonusFactor * bonusRel;
+
+      const effectiveWeight = baseW * bonusFactor;
+      totalWeight += effectiveWeight;
+      score += effectiveWeight;
+    } else {
+      totalWeight += baseW;
+      const ratio = Math.max(0, cIdx / rIdx);
+      score += baseW * ratio;
+    }
   }
 
   if (hr.experience) {
-    criteriaCount++;
-    const cIdx = indexOrMinusOne(experienceOrder, candidate.experience);
-    const rIdx = indexOrMinusOne(experienceOrder, hr.experience);
-    if (cIdx >= rIdx) score += 1;
+    const baseW = WEIGHTS.experience;
+    totalWeight += baseW;
+
+    const candYears = expMidYears[candidate.experience];
+    const reqYears = expMinYears[hr.experience];
+
+    let factor = 0;
+    if (reqYears === 0) factor = 1;
+    else if (candYears >= reqYears) factor = 1;
+    else factor = candYears / reqYears;
+
+    score += baseW * factor;
   }
 
   if (hr.workFormat) {
-    criteriaCount++;
-    if (candidate.workFormat === hr.workFormat) score += 1;
+    const baseW = WEIGHTS.workFormat;
+    totalWeight += baseW;
+
+    const factor = candidate.workFormat === hr.workFormat ? 1 : 0;
+    score += baseW * factor;
   }
 
-  if (criteriaCount === 0) return 0;
+  if (totalWeight === 0) return 0;
 
-  return Math.round((score / criteriaCount) * 100);
+  return Math.round((score / totalWeight) * 100);
 };
 
 const Dashboard = () => {
@@ -166,7 +217,7 @@ const Dashboard = () => {
     const fetchCandidates = async () => {
       try {
         setIsLoading(true);
-        setError(null);
+      setError(null);
 
         const res = await fetch("/cv-holder/cv-list/", {
           method: "GET",
@@ -321,19 +372,19 @@ const Dashboard = () => {
                   </div>
 
                   <div className="flex flex-wrap gap-1.5 text-[11px]">
-                    <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
+                    <span className="px-2 py-1 rounded-full bg_WHITE/10 text-gray-100 border border_WHITE/10">
                       Освіта:{" "}
                       <span className="font-semibold">{educationLabel}</span>
                     </span>
-                    <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
+                    <span className="px-2 py-1 rounded-full bg_WHITE/10 text-gray-100 border border_WHITE/10">
                       Досвід:{" "}
                       <span className="font-semibold">{experienceLabel}</span>
                     </span>
-                    <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
+                    <span className="px-2 py-1 rounded-full bg_WHITE/10 text-gray-100 border border_WHITE/10">
                       Галузь:{" "}
                       <span className="font-semibold">{sectorLabel}</span>
                     </span>
-                    <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
+                    <span className="px-2 py-1 rounded-full bg_WHITE/10 text-gray-100 border border_WHITE/10">
                       Формат:{" "}
                       <span className="font-semibold">{workFormatLabel}</span>
                     </span>
@@ -343,7 +394,7 @@ const Dashboard = () => {
                     <button className="flex-1 inline-flex items-center justify-center rounded-xl px-3 py-2 bg-blue-500/90 hover:bg-blue-500 text-white font-medium shadow-md shadow-blue-500/30 transition-colors">
                       Переглянути детально
                     </button>
-                    <button className="flex-1 inline-flex items-center justify-center rounded-xl px-3 py-2 bg-white/10 hover:bg-white/20 text-gray-100 border border-white/20 font-medium transition-colors">
+                    <button className="flex-1 inline-flex items-center justify-center rounded-xl px-3 py-2 bg-white/10 hover:bg-white/20 text-gray-100 border border_WHITE/20 font-medium transition-colors">
                       Позначити як цікавого
                     </button>
                   </div>
