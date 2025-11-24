@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Candidate Insight logo">
+  <defs>
+    <style>
+      .card { fill: #e3f2ff; stroke: #0f172a; stroke-width: 2.5; stroke-linejoin: round; }
+      .avatar { fill: #0f172a; }
+      .text-line { fill: none; stroke: #0f172a; stroke-width: 2; stroke-linecap: round; }
+      .glass-ring { fill: #9fd2ff; stroke: #0f172a; stroke-width: 2.5; }
+      .glass-handle { stroke: #0f172a; stroke-width: 3; stroke-linecap: round; }
+    </style>
+  </defs>
+
+  <!-- CV card -->
+  <rect class="card" x="8" y="8" width="34" height="48" rx="4"></rect>
+
+  <!-- Avatar -->
+  <circle class="avatar" cx="25" cy="23" r="6"></circle>
+  <path class="avatar" d="M17 34c1.8-4 4.9-6 8-6s6.2 2 8 6v2H17z"></path>
+
+  <!-- Text lines -->
+  <line class="text-line" x1="14" y1="40" x2="32" y2="40"></line>
+  <line class="text-line" x1="14" y1="45" x2="28" y2="45"></line>
+
+  <!-- Magnifying glass -->
+  <circle class="glass-ring" cx="40" cy="40" r="9"></circle>
+  <line class="glass-handle" x1="46" y1="46" x2="54" y2="54"></line>
+</svg>
