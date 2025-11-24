@@ -1,5 +1,4 @@
-// src/pages/HRrequirements.tsx
-
+import { useState } from "react";
 import { useHRRequirements } from "../context/context";
 
 const HRrequirements = () => {
@@ -14,6 +13,11 @@ const HRrequirements = () => {
     setWorkFormat,
     resetRequirements,
   } = useHRRequirements();
+
+  const [draftEducation, setDraftEducation] = useState(education || "");
+  const [draftSector, setDraftSector] = useState(sector || "");
+  const [draftExperience, setDraftExperience] = useState(experience || "");
+  const [draftWorkFormat, setDraftWorkFormat] = useState(workFormat || "");
 
   const educationOptions = [
     { label: "Початкова освіта", value: "primary_education" },
@@ -59,6 +63,21 @@ const HRrequirements = () => {
     "transition-all duration-200 bg-white/70 backdrop-blur-sm " +
     "text-gray-800 text-sm shadow-sm";
 
+  const handleApplyRequirements = () => {
+    setEducation(draftEducation as any);
+    setSector(draftSector as any);
+    setExperience(draftExperience as any);
+    setWorkFormat(draftWorkFormat as any);
+  };
+
+  const handleReset = () => {
+    resetRequirements();
+    setDraftEducation("");
+    setDraftSector("");
+    setDraftExperience("");
+    setDraftWorkFormat("");
+  };
+
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-5rem)] px-4">
       <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl p-8 md:p-10">
@@ -72,7 +91,6 @@ const HRrequirements = () => {
         </div>
 
         <div className="grid gap-5 md:grid-cols-2">
-          {/* Освіта */}
           <div className="flex flex-col">
             <label className="text-xs font-semibold uppercase tracking-wide text-gray-200 mb-1.5">
               Освіта
@@ -81,8 +99,8 @@ const HRrequirements = () => {
               Мінімальний рівень формальної освіти кандидата.
             </p>
             <select
-              value={education}
-              onChange={(e) => setEducation(e.target.value as any)}
+              value={draftEducation}
+              onChange={(e) => setDraftEducation(e.target.value)}
               className={selectBaseClasses}
             >
               <option value="">Оберіть рівень освіти…</option>
@@ -94,7 +112,6 @@ const HRrequirements = () => {
             </select>
           </div>
 
-          {/* Галузь роботи */}
           <div className="flex flex-col">
             <label className="text-xs font-semibold uppercase tracking-wide text-gray-200 mb-1.5">
               Галузь роботи
@@ -103,8 +120,8 @@ const HRrequirements = () => {
               У якій сфері шукаєш кандидата.
             </p>
             <select
-              value={sector}
-              onChange={(e) => setSector(e.target.value as any)}
+              value={draftSector}
+              onChange={(e) => setDraftSector(e.target.value)}
               className={selectBaseClasses}
             >
               <option value="">Оберіть галузь…</option>
@@ -116,7 +133,6 @@ const HRrequirements = () => {
             </select>
           </div>
 
-          {/* Досвід роботи */}
           <div className="flex flex-col">
             <label className="text-xs font-semibold uppercase tracking-wide text-gray-200 mb-1.5">
               Досвід роботи
@@ -125,8 +141,8 @@ const HRrequirements = () => {
               Мінімальний досвід у релевантній сфері.
             </p>
             <select
-              value={experience}
-              onChange={(e) => setExperience(e.target.value as any)}
+              value={draftExperience}
+              onChange={(e) => setDraftExperience(e.target.value)}
               className={selectBaseClasses}
             >
               <option value="">Оберіть рівень досвіду…</option>
@@ -138,7 +154,6 @@ const HRrequirements = () => {
             </select>
           </div>
 
-          {/* Формат роботи */}
           <div className="flex flex-col">
             <label className="text-xs font-semibold uppercase tracking-wide text-gray-200 mb-1.5">
               Формат роботи
@@ -147,8 +162,8 @@ const HRrequirements = () => {
               Де та як кандидат має працювати.
             </p>
             <select
-              value={workFormat}
-              onChange={(e) => setWorkFormat(e.target.value as any)}
+              value={draftWorkFormat}
+              onChange={(e) => setDraftWorkFormat(e.target.value)}
               className={selectBaseClasses}
             >
               <option value="">Оберіть формат…</option>
@@ -161,11 +176,11 @@ const HRrequirements = () => {
           </div>
         </div>
 
-        {/* Низ: кнопка + превʼю + ресет */}
         <div className="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex gap-2">
             <button
               type="button"
+              onClick={handleApplyRequirements}
               className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium 
                          bg-blue-500/90 hover:bg-blue-500 active:scale-[0.98] 
                          text-white shadow-lg shadow-blue-500/30 transition-transform duration-150"
@@ -175,7 +190,7 @@ const HRrequirements = () => {
 
             <button
               type="button"
-              onClick={resetRequirements}
+              onClick={handleReset}
               className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-xs font-medium 
                          bg-white/10 hover:bg-white/20 text-gray-100 border border-white/20 
                          transition-transform duration-150"

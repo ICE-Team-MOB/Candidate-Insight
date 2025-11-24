@@ -1,8 +1,6 @@
-# backendApps/cvHolder/utils.py
 import io
 import json
 from typing import Dict, Any
-
 import requests
 from requests.exceptions import ReadTimeout, ConnectionError
 from PyPDF2 import PdfReader
@@ -22,41 +20,40 @@ def extract_text_from_pdf(file_obj) -> str:
     return "\n\n".join(pages_text).strip()
 
 
+
 class LlamaError(Exception):
     """Своя ошибка для проблем з LLaMA / Ollama."""
 
-
 def call_llama_for_cv(pdf_text: str) -> Dict[str, Any]:
-    # ❗ Ограничиваем размер промпта (например, 8000 символов)
     MAX_CHARS = 8000
     if len(pdf_text) > MAX_CHARS:
         pdf_text = pdf_text[:MAX_CHARS]
 
     prompt = f"""
-Ти — HR-асистент. Ти отримуєш повний текст резюме українською або російською мовою.
+      Ти — HR-асистент. Ти отримуєш повний текст резюме українською або російською мовою.
 
-Твоє завдання — проаналізувати текст і повернути СТРОГО валідний JSON (без пояснень, без коментарів, без форматування Markdown).
+      Твоє завдання — проаналізувати текст і повернути СТРОГО валідний JSON (без пояснень, без коментарів, без форматування Markdown).
 
-Потрібні поля:
-- first_name — ім'я кандидата (рядок, без по-батькові).
-- last_name — прізвище кандидата.
-- education — один з варіантів:
-  "primary_education" | "basic_secondary_education" | "complete_secondary_education" |
-  "vocational_education" | "junior_bachelor" | "bachelor" | "master" | "phd" | "doctor_of_science".
-- sector — одна з категорій:
-  "it" | "finance" | "hr" | "marketing" | "sales" | "engineering" | "education" | "healthcare" | "other".
-- experience — одна з категорій:
-  "no_experience" | "0_1" | "1_3" | "3_5" | "5_plus".
-- work_format — одна з категорій:
-  "office" | "remote" | "hybrid".
+      Потрібні поля:
+      - first_name — ім'я кандидата (рядок, без по-батькові).
+      - last_name — прізвище кандидата.
+      - education — один з варіантів:
+        "primary_education" | "basic_secondary_education" | "complete_secondary_education" |
+        "vocational_education" | "junior_bachelor" | "bachelor" | "master" | "phd" | "doctor_of_science".
+      - sector — одна з категорій:
+        "it" | "finance" | "hr" | "marketing" | "sales" | "engineering" | "education" | "healthcare" | "other".
+      - experience — одна з категорій:
+        "no_experience" | "0_1" | "1_3" | "3_5" | "5_plus".
+      - work_format — одна з категорій:
+        "office" | "remote" | "hybrid".
 
-Текст резюме:
-\"\"\"{pdf_text}\"\"\"
+      Текст резюме:
+      \"\"\"{pdf_text}\"\"\"
 
 
-Поверни ТІЛЬКИ JSON в одному рядку, наприклад:
-{{"first_name": "Андрій", "last_name": "Спесівцев", "education": "master", "sector": "it", "experience": "1_3", "work_format": "remote"}}
-"""
+      Поверни ТІЛЬКИ JSON в одному рядку, наприклад:
+      {{"first_name": "Андрій", "last_name": "Спесівцев", "education": "master", "sector": "it", "experience": "1_3", "work_format": "remote"}}
+    """
 
     try:
         resp = requests.post(
@@ -65,14 +62,12 @@ def call_llama_for_cv(pdf_text: str) -> Dict[str, Any]:
                 "model": "llama3.1",
                 "prompt": prompt,
                 "stream": False,
-                # ❗ просим модель мало писать
                 "options": {
-                    "num_predict": 256,   # максимум токенов в ответе
+                    "num_predict": 256,
                     "temperature": 0.2,
                 },
             },
-            # ❗ увеличиваем таймаут на чтение ответа
-            timeout=240,  # секунд
+            timeout=240,
         )
     except ReadTimeout as e:
         raise LlamaError("LLaMA не відповіла вчасно (ReadTimeout).") from e

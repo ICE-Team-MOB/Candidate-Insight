@@ -13,7 +13,6 @@ const CV = () => {
   const [experience, setExperience] = useState("");
   const [workFormat, setWorkFormat] = useState("");
 
-  // 🔁 Бажано винести в окремий файл і імпортувати і тут, і в HRrequirements
   const educationOptions = [
     { label: "Початкова освіта", value: "primary_education" },
     { label: "Базова середня освіта (основна школа)", value: "basic_secondary_education" },
@@ -127,7 +126,6 @@ const CV = () => {
       return;
     }
 
-    // mode === "manual"
     if (
       !firstName &&
       !lastName &&
@@ -191,7 +189,6 @@ const CV = () => {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-5rem)] px-4">
       <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl p-8 md:p-10">
-        {/* Заголовок */}
         <div className="mb-6">
           <h1 className="text-2xl md:text-3xl font-semibold text-white tracking-tight">
             Резюме кандидата
@@ -202,7 +199,6 @@ const CV = () => {
           </p>
         </div>
 
-        {/* Перемикач режимів */}
         <div className="mb-6 inline-flex rounded-xl border border-white/10 bg-white/10 p-1">
           <button
             type="button"
@@ -230,7 +226,6 @@ const CV = () => {
           </button>
         </div>
 
-        {/* Режим: PDF */}
         {mode === "pdf" && (
           <div className="space-y-5">
             <div className="flex flex-col">
@@ -271,10 +266,8 @@ const CV = () => {
           </div>
         )}
 
-        {/* Режим: ручне заповнення */}
         {mode === "manual" && (
           <div className="grid gap-5 md:grid-cols-2">
-            {/* Імʼя + прізвище */}
             <div className="md:col-span-2 flex flex-col gap-4 md:flex-row">
               <div className="flex-1 flex flex-col">
                 <label className="text-xs font-semibold uppercase tracking-wide text-gray-200 mb-1.5">
@@ -309,7 +302,6 @@ const CV = () => {
               </div>
             </div>
 
-            {/* Освіта */}
             <div className="flex flex-col">
               <label className="text-xs font-semibold uppercase tracking-wide text-gray-200 mb-1.5">
                 Освіта
@@ -331,7 +323,6 @@ const CV = () => {
               </select>
             </div>
 
-            {/* Галузь */}
             <div className="flex flex-col">
               <label className="text-xs font-semibold uppercase tracking-wide text-gray-200 mb-1.5">
                 Галузь роботи
@@ -353,7 +344,6 @@ const CV = () => {
               </select>
             </div>
 
-            {/* Досвід */}
             <div className="flex flex-col">
               <label className="text-xs font-semibold uppercase tracking-wide text-gray-200 mb-1.5">
                 Досвід роботи
@@ -375,7 +365,6 @@ const CV = () => {
               </select>
             </div>
 
-            {/* Формат роботи */}
             <div className="flex flex-col">
               <label className="text-xs font-semibold uppercase tracking-wide text-gray-200 mb-1.5">
                 Формат роботи
@@ -399,7 +388,6 @@ const CV = () => {
           </div>
         )}
 
-        {/* Низ карточки: кнопка + короткий опис */}
         <div className="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <button
             type="button"

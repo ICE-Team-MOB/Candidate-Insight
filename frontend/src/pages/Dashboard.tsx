@@ -87,7 +87,6 @@ const workFormatOptions: { label: string; value: WorkFormatValue }[] = [
   { label: "Гібридний формат", value: "hybrid" },
 ];
 
-// 🔢 Порядок “старшинства” освіти та досвіду
 const educationOrder: EducationValue[] = [
   "primary_education",
   "basic_secondary_education",
@@ -108,7 +107,6 @@ const experienceOrder: ExperienceValue[] = [
   "5_plus",
 ];
 
-// 🧮 Допоміжні функції
 const getLabel = <T extends string>(
   options: { label: string; value: T }[],
   value: T
@@ -117,7 +115,6 @@ const getLabel = <T extends string>(
 const indexOrMinusOne = <T extends string>(order: T[], v?: T) =>
   v ? order.indexOf(v) : -1;
 
-// простий скоринг: кожен критерій = 25%
 const calcMatchScore = (candidate: Candidate, hr: HRRequirements): number => {
   let score = 0;
   let criteriaCount = 0;
@@ -165,7 +162,6 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ⬇️ тянем кандидатов с бэка
   useEffect(() => {
     const fetchCandidates = async () => {
       try {
@@ -208,7 +204,6 @@ const Dashboard = () => {
   return (
     <div className="flex items-start justify-center min-h-[calc(100vh-5rem)] px-4 py-8">
       <div className="w-full max-w-6xl space-y-8">
-        {/* Верхній блок: резюме вимог HR */}
         <section className="rounded-2xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl p-6 md:p-8">
           <h1 className="text-2xl md:text-3xl font-semibold text-white tracking-tight mb-3">
             Дашборд кандидатів
@@ -261,7 +256,6 @@ const Dashboard = () => {
           </div>
         </section>
 
-        {/* Статусы загрузки */}
         {isLoading && (
           <p className="text-sm text-gray-200/80">Завантажуємо кандидатів…</p>
         )}
@@ -270,7 +264,6 @@ const Dashboard = () => {
           <p className="text-sm text-red-300">{error}</p>
         )}
 
-        {/* Список кандидатів */}
         {!isLoading && !error && (
           <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {candidates.length === 0 && (
