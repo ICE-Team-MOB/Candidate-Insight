@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import HRrequirements from "./pages/HRrequirements";
 import CV from "./pages/CV";
 import Dashboard from "./pages/Dashboard";
@@ -18,6 +18,8 @@ function App() {
             <Route path="/cv" element={<CV />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/hrrequirements" element={<HRrequirements />} />
+
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </HRRequirementsProvider>
       </main>
