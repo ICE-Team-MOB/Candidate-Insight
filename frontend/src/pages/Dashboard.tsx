@@ -1,5 +1,5 @@
+import { useEffect, useState } from "react";
 import { useHRRequirements } from "../context/context";
-
 
 type EducationValue =
   | "primary_education"
@@ -122,21 +122,18 @@ const calcMatchScore = (candidate: Candidate, hr: HRRequirements): number => {
   let score = 0;
   let criteriaCount = 0;
 
-  // Освіта
   if (hr.education) {
     criteriaCount++;
     const cIdx = indexOrMinusOne(educationOrder, candidate.education);
     const rIdx = indexOrMinusOne(educationOrder, hr.education);
-    if (cIdx >= rIdx) score += 1; // “не гірша за вимогу”
+    if (cIdx >= rIdx) score += 1;
   }
 
-  // Галузь
   if (hr.sector) {
     criteriaCount++;
     if (candidate.sector === hr.sector) score += 1;
   }
 
-  // Досвід
   if (hr.experience) {
     criteriaCount++;
     const cIdx = indexOrMinusOne(experienceOrder, candidate.experience);
@@ -144,7 +141,6 @@ const calcMatchScore = (candidate: Candidate, hr: HRRequirements): number => {
     if (cIdx >= rIdx) score += 1;
   }
 
-  // Формат роботи
   if (hr.workFormat) {
     criteriaCount++;
     if (candidate.workFormat === hr.workFormat) score += 1;
@@ -152,66 +148,62 @@ const calcMatchScore = (candidate: Candidate, hr: HRRequirements): number => {
 
   if (criteriaCount === 0) return 0;
 
-  // нормалізуємо до 0–100
   return Math.round((score / criteriaCount) * 100);
 };
 
-// 🧪 Поки що мокові дані кандидатів
-const candidates: Candidate[] = [
-  {
-    id: 1,
-    firstName: "Андрій",
-    lastName: "Спесівцев",
-    education: "master",
-    sector: "it",
-    experience: "3_5",
-    workFormat: "remote",
-  },
-  {
-    id: 2,
-    firstName: "Олена",
-    lastName: "Ковальчук",
-    education: "bachelor",
-    sector: "marketing",
-    experience: "1_3",
-    workFormat: "hybrid",
-  },
-  {
-    id: 3,
-    firstName: "Ігор",
-    lastName: "Дяченко",
-    education: "junior_bachelor",
-    sector: "it",
-    experience: "0_1",
-    workFormat: "office",
-  },
-  {
-    id: 4,
-    firstName: "Марія",
-    lastName: "Шевченко",
-    education: "phd",
-    sector: "education",
-    experience: "5_plus",
-    workFormat: "remote",
-  },
-];
-
 const Dashboard = () => {
-  // ⬇️ Берём актуальные требования из контекста
-  const {
-    education,
-    sector,
-    experience,
-    workFormat,
-  } = useHRRequirements();
+  const { education, sector, experience, workFormat } = useHRRequirements();
 
-  // Мапим контекст ("" | value) в объект требований (value | undefined)
   const hrRequirements: HRRequirements = {
     education: education ? (education as EducationValue) : undefined,
     sector: sector ? (sector as SectorValue) : undefined,
     experience: experience ? (experience as ExperienceValue) : undefined,
     workFormat: workFormat ? (workFormat as WorkFormatValue) : undefined,
   };
+
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // ⬇️ тянем кандидатов с бэка
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const res = await fetch("/cv-holder/cv-list/", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          throw new Error("Не вдалося завантажити кандидатів");
+        }
+
+        const data = await res.json();
+
+        const normalized: Candidate[] = (data as any[]).map((item) => ({
+          id: item.id,
+          firstName: item.first_name,
+          lastName: item.last_name,
+          education: item.education,
+          sector: item.sector,
+          experience: item.experience,
+          workFormat: item.work_format,
+        }));
+
+        setCandidates(normalized);
+      } catch (e) {
+        console.error(e);
+        setError("Сталася помилка при завантаженні кандидатів.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCandidates();
+  }, []);
 
   return (
     <div className="flex items-start justify-center min-h-[calc(100vh-5rem)] px-4 py-8">
@@ -269,78 +261,104 @@ const Dashboard = () => {
           </div>
         </section>
 
+        {/* Статусы загрузки */}
+        {isLoading && (
+          <p className="text-sm text-gray-200/80">Завантажуємо кандидатів…</p>
+        )}
+
+        {error && !isLoading && (
+          <p className="text-sm text-red-300">{error}</p>
+        )}
+
         {/* Список кандидатів */}
-        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {candidates.map((candidate) => {
-            const score = calcMatchScore(candidate, hrRequirements);
+        {!isLoading && !error && (
+          <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {candidates.length === 0 && (
+              <p className="text-sm text-gray-200/80">
+                Поки що немає жодного збереженого резюме.
+              </p>
+            )}
 
-            const educationLabel = getLabel(educationOptions, candidate.education);
-            const sectorLabel = getLabel(sectorOptions, candidate.sector);
-            const experienceLabel = getLabel(experienceOptions, candidate.experience);
-            const workFormatLabel = getLabel(workFormatOptions, candidate.workFormat);
+            {candidates.map((candidate) => {
+              const score = calcMatchScore(candidate, hrRequirements);
 
-            return (
-              <div
-                key={candidate.id}
-                className="relative rounded-2xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-xl p-5 flex flex-col gap-4"
-              >
-                {/* бейдж з % */}
-                <div className="absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold bg-slate-900/80 text-white border border-white/20 shadow-md">
-                  {score}% відповідності
-                </div>
+              const educationLabel = getLabel(
+                educationOptions,
+                candidate.education
+              );
+              const sectorLabel = getLabel(sectorOptions, candidate.sector);
+              const experienceLabel = getLabel(
+                experienceOptions,
+                candidate.experience
+              );
+              const workFormatLabel = getLabel(
+                workFormatOptions,
+                candidate.workFormat
+              );
 
-                <div>
-                  <h2 className="text-lg font-semibold text-white">
-                    {candidate.firstName} {candidate.lastName}
-                  </h2>
-                  <p className="text-xs text-gray-300 mt-0.5">
-                    {sectorLabel} · {workFormatLabel}
-                  </p>
-                </div>
-
-                {/* Прогрес-бар */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px] text-gray-200/80">
-                    <span>Рівень відповідності вимогам</span>
-                    <span className="font-semibold">{score}%</span>
+              return (
+                <div
+                  key={candidate.id}
+                  className="relative rounded-2xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-xl p-5 flex flex-col gap-4"
+                >
+                  <div className="absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold bg-slate-900/80 text-white border border-white/20 shadow-md">
+                    {score}% відповідності
                   </div>
-                  <div className="h-2 w-full rounded-full bg-slate-900/60 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-blue-400 via-sky-400 to-teal-300 transition-all duration-300"
-                      style={{ width: `${score}%` }}
-                    />
+
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">
+                      {candidate.firstName} {candidate.lastName}
+                    </h2>
+                    <p className="text-xs text-gray-300 mt-0.5">
+                      {sectorLabel} · {workFormatLabel}
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px] text-gray-200/80">
+                      <span>Рівень відповідності вимогам</span>
+                      <span className="font-semibold">{score}%</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-slate-900/60 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-blue-400 via-sky-400 to-teal-300 transition-all duration-300"
+                        style={{ width: `${score}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 text-[11px]">
+                    <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
+                      Освіта:{" "}
+                      <span className="font-semibold">{educationLabel}</span>
+                    </span>
+                    <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
+                      Досвід:{" "}
+                      <span className="font-semibold">{experienceLabel}</span>
+                    </span>
+                    <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
+                      Галузь:{" "}
+                      <span className="font-semibold">{sectorLabel}</span>
+                    </span>
+                    <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
+                      Формат:{" "}
+                      <span className="font-semibold">{workFormatLabel}</span>
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex gap-2 text-xs">
+                    <button className="flex-1 inline-flex items-center justify-center rounded-xl px-3 py-2 bg-blue-500/90 hover:bg-blue-500 text-white font-medium shadow-md shadow-blue-500/30 transition-colors">
+                      Переглянути детально
+                    </button>
+                    <button className="flex-1 inline-flex items-center justify-center rounded-xl px-3 py-2 bg-white/10 hover:bg-white/20 text-gray-100 border border-white/20 font-medium transition-colors">
+                      Позначити як цікавого
+                    </button>
                   </div>
                 </div>
-
-                {/* Деталі у вигляді тегів */}
-                <div className="flex flex-wrap gap-1.5 text-[11px]">
-                  <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
-                    Освіта: <span className="font-semibold">{educationLabel}</span>
-                  </span>
-                  <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
-                    Досвід: <span className="font-semibold">{experienceLabel}</span>
-                  </span>
-                  <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
-                    Галузь: <span className="font-semibold">{sectorLabel}</span>
-                  </span>
-                  <span className="px-2 py-1 rounded-full bg-white/10 text-gray-100 border border-white/10">
-                    Формат: <span className="font-semibold">{workFormatLabel}</span>
-                  </span>
-                </div>
-
-                {/* Кнопки дій (плейсхолдери) */}
-                <div className="mt-2 flex gap-2 text-xs">
-                  <button className="flex-1 inline-flex items-center justify-center rounded-xl px-3 py-2 bg-blue-500/90 hover:bg-blue-500 text-white font-medium shadow-md shadow-blue-500/30 transition-colors">
-                    Переглянути детально
-                  </button>
-                  <button className="flex-1 inline-flex items-center justify-center rounded-xl px-3 py-2 bg-white/10 hover:bg-white/20 text-gray-100 border border-white/20 font-medium transition-colors">
-                    Позначити як цікавого
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </section>
+              );
+            })}
+          </section>
+        )}
       </div>
     </div>
   );
