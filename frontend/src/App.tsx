@@ -8,11 +8,11 @@ import { HRRequirementsProvider } from "./context/context";
 
 function App() {
   return (
-    <div className="relative min-h-screen bg-slate-900 text-white">
+    <div>
       <ParticlesBackground />
       <Header />
 
-      <main className="relative z-10 pt-16">
+      <main className="relative pt-16">
         <HRRequirementsProvider>
           <Routes>
             <Route path="/cv" element={<CV />} />
